@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Defines the infrastructure of the whole ed-match-data-crawling-module as code.
+  The CrawlerXXC function receives jobs via the CrawlerXXCJobs queue.
+  MatchDataIngestQueue receives the match data batches.
+
+Globals:
+  Function:
+    MemorySize: 512
+    Environment:
+      Variables:
+        BASE_CRAWL_URL: 'override_connection_string'
+        MATCH_DATA_INGEST_QUEUE_URL: !Ref MatchDataIngestQueue
+
+Resources:  # Implicitly generated resources https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#s3
+
+  CrawlerXXCJobs:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ed-match-data-crawling-module-xxc-crawler-jobs
+      VisibilityTimeout: 240
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt CrawlerJobsGutterQueue.Arn
+        maxReceiveCount: 1  # Prevent CrawlerXXC from receiving the same message again
+
+  CrawlerJobsGutterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ed-match-data-crawling-module-crawler-jobs-dlq
+      MessageRetentionPeriod: 86400  # Purge messages from the gutter after a day
+
+  CrawlerXXC:
+    Type: AWS::Serverless::Function  # Creates a Lambda function, role and event source mappings https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Runtime: python3.7
+      Timeout: 180
+      CodeUri: ./lambda/ed-match-data-xxc-crawler/
+      Handler: crawler_function.lambda_handler
+      Policies:
+        - AWSLambdaExecute # Managed Policy
+      Events:
+        CrawlerXCCJobTrigger:
+          Type: SQS # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#event-source-types
+          Properties:
+            Queue: !GetAtt CrawlerXXCJobs.Arn
+            BatchSize: 1
+            Enabled: true  # Don't poll the queue actively
+      Environment:
+        Variables:
+          JOB_QUEUE_URL: !Ref CrawlerXXCJobs
+      Tags:
+        project: ed-sports-betting
+
+  MatchDataIngestQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ed-match-data-crawling-module-ingest.fifo
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      MessageRetentionPeriod: 1209600  # Purge messages from the gutter after a day

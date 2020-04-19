@@ -1,0 +1,9 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "ed-match-data-crawling-module"
+s3_bucket = "ed-serverless-deployments"
+s3_prefix = "ed-match-data-crawling-module"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
