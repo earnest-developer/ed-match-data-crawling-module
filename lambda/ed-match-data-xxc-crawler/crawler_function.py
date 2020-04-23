@@ -16,10 +16,10 @@ sqs_client = boto3.client('sqs')
 
 def lambda_handler(event, context):
 
-    print('Dequeuing message: ' + json.dumps(event, indent=4))
+    message = parse_message(event)
 
-    starting_date: str = date.fromisoformat(event['Records'][0]['body']['starting_date'])
-    url_division: str = event['Records'][0]['body']['division']
+    starting_date: str = date.fromisoformat(message['starting_date'].split("T")[0])
+    url_division: str = message['division']
 
     crawl_date = starting_date
 
@@ -49,7 +49,8 @@ def lambda_handler(event, context):
             match_data = scrape_data_from_pages(match_block_links)
 
             if(match_data):
-                send_to_ingest_queue(match_block_date, match_data)
+                print(match_block_date)
+                print(*match_data, sep='\n')
 
         # Progress the crawl
         crawl_date += relativedelta(months=1)
@@ -119,14 +120,7 @@ def scrape_match_page_data(page_uri: str, pipe_connection: Pipe):
     pipe_connection.close()
 
 
-def send_to_ingest_queue(match_block_date: str, match_data: list):
-    print(match_block_date)
-    print(*match_data, sep='\n')
-    sqs_client.send_message(
-        QueueUrl=config.MATCH_DATA_INGEST_QUEUE_URL,
-        MessageBody=(
-            'Information about current NY Times fiction bestseller for '
-            'week of 12/11/2016.'
-        ),
-        MessageGroupId='string'
-    )
+def parse_message(event):
+    message_body = event['Records'][0]['body']
+    print('Dequeuing message: ' + message_body)
+    return json.loads(message_body)

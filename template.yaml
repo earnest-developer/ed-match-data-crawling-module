@@ -15,6 +15,42 @@ Globals:
 
 Resources:  # Implicitly generated resources https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#s3
 
+  DailyCrawlJob:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: Issue a crawl job at the end of every day
+      ScheduleExpression: "cron(0/5 * * * ? *)"
+      RoleArn: !GetAtt DailyCrawlJobRole.Arn
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt CrawlerXXCJobs.Arn
+          Id: ed-match-data-crawling-module-xxc-crawler-jobs
+          InputTransformer:
+            InputPathsMap: 
+              date_today : $.time
+            InputTemplate: '{"starting_date": <date_today>, "division": "premier-league"}'
+
+  DailyCrawlJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - events.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: queue-crawl-job-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+
   CrawlerXXCJobs:
     Type: AWS::SQS::Queue
     Properties:

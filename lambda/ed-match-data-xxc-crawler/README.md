@@ -22,7 +22,7 @@ This application is made to be hosted on AWS Lambda and as such some constraints
 to running it locally. 
 
 The SAM CLI Tool is *not* used for local debugging (PITA), instead should debug by running the unit tests under  
-`test_crawler_function.py`. Make sure to enable breaking on `Raised Exceptions` on VS Code.
+`test_crawler_function.py`. Make sure to enable breaking on `Raised Exceptions` on VS Code and use the provided `launch.json` file  
 
 Set the following variables in the shell that will run this application.
 
