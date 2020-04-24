@@ -54,3 +54,7 @@ def map_ft_r_from_score(ft_hg: int, ft_ag: int):
         return 'H'
     else:
         return 'A'
+
+
+def obj_dict(obj):
+    return obj.__dict__

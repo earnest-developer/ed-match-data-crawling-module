@@ -9,7 +9,9 @@ import utils
 import config
 from multiprocessing import Process, Pipe
 from datetime import date
-from dateutil.relativedelta import relativedelta
+from dateutil import relativedelta, parser
+from botocore.exceptions import ClientError
+
 
 sqs_client = boto3.client('sqs')
 
@@ -49,8 +51,7 @@ def lambda_handler(event, context):
             match_data = scrape_data_from_pages(match_block_links)
 
             if(match_data):
-                print(match_block_date)
-                print(*match_data, sep='\n')
+                queue_match_data(match_block_date, match_data)
 
         # Progress the crawl
         crawl_date += relativedelta(months=1)
@@ -118,6 +119,42 @@ def scrape_match_page_data(page_uri: str, pipe_connection: Pipe):
 
     pipe_connection.send([result])
     pipe_connection.close()
+
+
+def queue_match_data(match_block_date: str, match_data: list):
+    """Sends the match data to the ingest SQS queue. Orders them so they have an expected hash
+
+    :param match_block_date: The page URI
+    :param match_data: The pipe connection used to send data to the caller of this function
+
+    """
+
+    match_date = parser.parse(match_block_date).strftime('%Y-%m-%d')
+
+    match_data.sort(key=lambda x: x.home_team, reverse=False)
+    serialized_message = json.dumps(match_data, default=utils.obj_dict)
+
+    try:
+        sqs_client.send_message(
+            QueueUrl=config.MATCH_DATA_INGEST_QUEUE_URL,
+            MessageAttributes={
+                'MessageType': {
+                    'DataType': 'String',
+                    'StringValue': 'MatchData'
+                },
+                'MatchDate': {
+                    'DataType': 'String',
+                    'StringValue': match_date
+                }
+            },
+            MessageBody=serialized_message,
+            MessageGroupId='xxc-crawler'
+        )
+
+    except ClientError as exception:
+        print(exception)
+
+    print('Queued ' + match_date + ' for ingestion')
 
 
 def parse_message(event):

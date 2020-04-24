@@ -19,7 +19,7 @@ Resources:  # Implicitly generated resources https://github.com/awslabs/serverle
     Type: AWS::Events::Rule
     Properties: 
       Description: Issue a crawl job at the end of every day
-      ScheduleExpression: "cron(0/5 * * * ? *)"
+      ScheduleExpression: "cron(0 23 * * ? *)"
       RoleArn: !GetAtt DailyCrawlJobRole.Arn
       State: ENABLED
       Targets:
