@@ -1,3 +1,4 @@
+import localstack_client.session
 import pytest
 import json
 import crawler_function
@@ -17,7 +18,8 @@ def test_lambda_handler(sqs_crawl_job_event):
     """ Loads the event file in JSON """
 
     # Setup
-    crawler_function.sqs_client = None
+    session = localstack_client.session.Session()
+    crawler_function.sqs_client = session.client('sqs')
 
     # Act
     crawler_function.lambda_handler(sqs_crawl_job_event, "")

@@ -154,7 +154,7 @@ def queue_match_data(match_block_date: str, match_data: list):
     except ClientError as exception:
         print(exception)
 
-    print('Queued ' + match_date + ' for ingestion')
+    print('Queuing ' + match_date + ' for ingestion')
 
 
 def parse_message(event):

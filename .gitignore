@@ -4,3 +4,5 @@
 **/bin
 
 .aws-sam
+
+**/config_local.py
