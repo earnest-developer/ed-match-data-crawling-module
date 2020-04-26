@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "PyTest",
+            "name": "CrawlerXXC",
             "type": "python",
             "request": "launch",
             "stopOnEntry": false,
@@ -11,7 +11,26 @@
             "args": [
                 "-sv"
             ],
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceRoot}/lambda/ed-match-data-xxc-crawler",
+            "env": {},
+            "envFile": "${workspaceRoot}/.venv",
+            "debugOptions": [
+                "WaitOnAbnormalExit",
+                "WaitOnNormalExit",
+                "RedirectOutput"
+            ]
+        },
+        {
+            "name": "Insertor",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": false,
+            "pythonPath": "${config:python.pythonPath}",
+            "module": "pytest",
+            "args": [
+                "-sv"
+            ],
+            "cwd": "${workspaceRoot}/lambda/ed-match-data-insertor",
             "env": {},
             "envFile": "${workspaceRoot}/.venv",
             "debugOptions": [

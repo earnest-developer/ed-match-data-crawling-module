@@ -1,0 +1,29 @@
+{
+    "Records": [
+        {
+            "messageId": "7b5a5d17-35ba-4aa7-9805-95318d1413e9",
+            "receiptHandle": "AQEBmFL/NEyrvVW4jg3f8D5F1Ei71gOLMzOch6cJUVkkNIHKxaJk+TP2wLS356zm2rIobJEmNzcItADQyzX+js03EuUHhBeA5XTgyN2UOul+LTMMTnsHyqNxKRq6lmy2XsSn+zu1KfWjkn8QhPFQLgMU1Ujaq43lWxh3O0DHf3V2XBRacbrIx2rn80LZwMzIq1R9TgxCONQVqSSeR9vJbQ/7nkWErybtBd1zLt4DfytU9EA7YBGiEyvBJCnkKST0/IrPfoilgfKRVVLcKe1K988QwwIV5DrQgDdY6QLhTeLpEXZVYGDH/t+LfmZMLpi8W0SWce1+qpLf4PN9wiqKKu48CV1dfyGrAQ0NH63DguB5V5AlLENkWB6Y9FPinz",
+            "body": "[{\"division\": \"E0\", \"match_date\": \"$date\", \"home_team\": \"Bournemouth\", \"away_team\": \"Aston Villa\", \"ft_hg\": \"2\", \"ft_ag\": \"1\", \"ft_r\": \"H\", \"ht_hg\": \"2\", \"ht_ag\": \"0\", \"ht_r\": \"H\", \"season\": \"season\"}, {\"division\": \"E0\", \"match_date\": \"$date\", \"home_team\": \"Crystal Palace\", \"away_team\": \"Sheff Utd\", \"ft_hg\": \"0\", \"ft_ag\": \"1\", \"ft_r\": \"A\", \"ht_hg\": \"0\", \"ht_ag\": \"0\", \"ht_r\": \"D\", \"season\": \"season\"}]",
+            "attributes": {
+                "ApproximateReceiveCount": "1",
+                "SentTimestamp": "1587482381974",
+                "SenderId": "580731640327",
+                "ApproximateFirstReceiveTimestamp": "1587482381978"
+            },
+            "messageAttributes": {
+                "MessageType": {
+                    "DataType": "String",
+                    "StringValue": "MatchData"
+                },
+                "MatchDate": {
+                    "DataType": "String",
+                    "StringValue": "2020-03-01"
+                }
+            },
+            "md5OfBody": "9d442f5a247dce6056621e43560ddc0d",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:eu-west-2:580731640327:ed-match-data-crawling-module-xxc-crawler-jobs",
+            "awsRegion": "eu-west-2"
+        }
+    ]
+}

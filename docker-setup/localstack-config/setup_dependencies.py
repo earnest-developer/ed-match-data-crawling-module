@@ -16,3 +16,4 @@ def main():
     sqs = aws.create_client(session, 'sqs', key_id, '4576')
     aws.create_sqs_queue(sqs, 'ed-match-data-crawling-module-xxc-crawler-jobs', 'false')
     aws.create_sqs_queue(sqs, 'ed-match-data-crawling-module-ingest.fifo', 'true')
+    aws.create_sqs_queue(sqs, 'ed-match-data-notifications', 'false')

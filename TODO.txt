@@ -1,9 +1,9 @@
-4. Sort out last day's bug
-5. Extend with all fields
 6. Implement fallback
-1. Implement Insertor
-8. logging instead of console
+7. Implement docker-compose-apps
+
+
 
 Blogging:
 1. Python lambda local debugging
 2. Events bridge cron
+3. Python SQL handling in Lambda

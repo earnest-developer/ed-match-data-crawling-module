@@ -1,6 +1,7 @@
 version: '3.5'
 
 services:
+
   localstack:
     image: localstack/localstack
     container_name: localstack
@@ -28,6 +29,19 @@ services:
     networks:
       - ed-match-data-crawling-module-network
 
+  aurora.mysql:
+    container_name: aws-aurora
+    build:
+      context: .
+      dockerfile: ./docker-setup/aurora-mysql/Dockerfile
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: match_data
+    ports:
+      - 3306:3306
+    networks:
+      - ed-match-data-crawling-module-network
+
 networks:
     ed-match-data-crawling-module-network: 
-        name: flow-network
+        name: ed-match-data-crawling-module-network

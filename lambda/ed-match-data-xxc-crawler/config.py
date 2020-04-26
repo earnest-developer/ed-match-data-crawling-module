@@ -12,4 +12,4 @@ else:
 
 BASE_CRAWL_URL = config_local and config_local.BASE_CRAWL_URL or environ.get('BASE_CRAWL_URL')
 JOB_QUEUE_URL = config_local and config_local.JOB_QUEUE_URL or environ.get('JOB_QUEUE_URL')
-MATCH_DATA_INGEST_QUEUE_URL = config_local and config_local.MATCH_DATA_INGEST_QUEUE_URL or environ.get('MATCH_DATA_INGEST_QUEUE_URL')
+INSERTOR_INGEST_QUEUE_URL = config_local and config_local.INSERTOR_INGEST_QUEUE_URL or environ.get('INSERTOR_INGEST_QUEUE_URL')

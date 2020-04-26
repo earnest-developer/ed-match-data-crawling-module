@@ -1,26 +1,81 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Defines the infrastructure of the whole ed-match-data-crawling-module as code.
-  The CrawlerXXC function receives jobs via the CrawlerXXCJobs queue.
-  MatchDataIngestQueue receives the match data batches.
+  Templates the infrastructure of the ed-match-data-crawling-module.
+  Consists of a crawler function that scrapes a specific URL and a function, Insertor, that persists the data.
+  Crawl jobs are scheduled and enqueued by an AWS EventBridge rule that triggers nightly.
+  An ed-match-data-notifications queue is exposed to let consumers outside the module know of successful data inserts.
 
 Globals:
   Function:
-    MemorySize: 512
+    MemorySize: 256
     Environment:
       Variables:
-        BASE_CRAWL_URL: 'override_connection_string'
-        MATCH_DATA_INGEST_QUEUE_URL: !Ref MatchDataIngestQueue
+        INSERTOR_INGEST_QUEUE_URL: !Ref InsertorIngestQueue
 
-Resources:  # Implicitly generated resources https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#s3
+Resources:
 
-  DailyCrawlJob:
+  Insertor:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.7
+      Timeout: 180
+      CodeUri: ./lambda/ed-match-data-insertor/
+      Handler: function.lambda_handler
+      Policies:
+        - AWSLambdaExecute
+        - AmazonSQSFullAccess #  Todo: replace with execution role
+      VpcConfig: #  Todo: move to parameters
+        SecurityGroupIds:
+          - sg-65ca6405
+        SubnetIds:
+          - subnet-dca67590
+          - subnet-ddc283b4
+          - subnet-547bf62e
+      Events:
+        IngestJobTrigger:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt InsertorIngestQueue.Arn
+            BatchSize: 1
+            Enabled: true
+      Environment:
+        Variables:
+          MATCH_DATA_NOTIFICATIONS_QUEUE_URL: !Ref MatchDataNotificationsQueue
+          MYSQL_CONNECTION_STRING: 'overwrite_this'
+      Tags:
+        project: ed-sports-betting
+
+  CrawlerXXC:
+    Type: AWS::Serverless::Function  
+    Properties:
+      Runtime: python3.7
+      Timeout: 180
+      CodeUri: ./lambda/ed-match-data-xxc-crawler/
+      Handler: function.lambda_handler
+      Policies:
+        - AWSLambdaExecute
+        - AmazonSQSFullAccess #  Todo: replace with execution role
+      Events:
+        CrawlerXCCJobTrigger:
+          Type: SQS 
+          Properties:
+            Queue: !GetAtt CrawlerXXCJobs.Arn
+            BatchSize: 1
+            Enabled: true
+      Environment:
+        Variables:
+          BASE_CRAWL_URL: 'overwrite_this'
+          JOB_QUEUE_URL: !Ref CrawlerXXCJobs
+      Tags:
+        project: ed-sports-betting
+
+  CrawlJobScheduler:
     Type: AWS::Events::Rule
     Properties: 
-      Description: Issue a crawl job at the end of every day
+      Description: Issue a crawl job nightly at 11pm
       ScheduleExpression: "cron(0 23 * * ? *)"
-      RoleArn: !GetAtt DailyCrawlJobRole.Arn
+      RoleArn: !GetAtt CrawlJobSchedulerRole.Arn
       State: ENABLED
       Targets:
         - Arn: !GetAtt CrawlerXXCJobs.Arn
@@ -29,27 +84,6 @@ Resources:  # Implicitly generated resources https://github.com/awslabs/serverle
             InputPathsMap: 
               date_today : $.time
             InputTemplate: '{"starting_date": <date_today>, "division": "premier-league"}'
-
-  DailyCrawlJobRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-              - events.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Policies:
-        - PolicyName: queue-crawl-job-policy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: '*'
-                Resource: '*'
 
   CrawlerXXCJobs:
     Type: AWS::SQS::Queue
@@ -66,56 +100,42 @@ Resources:  # Implicitly generated resources https://github.com/awslabs/serverle
       QueueName: ed-match-data-crawling-module-crawler-jobs-dlq
       MessageRetentionPeriod: 86400  # Purge messages from the gutter after a day
 
-  CrawlerXXC:
-    Type: AWS::Serverless::Function  # Creates a Lambda function, role and event source mappings https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      Runtime: python3.7
-      Timeout: 180
-      CodeUri: ./lambda/ed-match-data-xxc-crawler/
-      Handler: crawler_function.lambda_handler
-      Policies:
-        - AWSLambdaExecute # Managed Policy
-        - AmazonSQSFullAccess # Managed Policy
-      Events:
-        CrawlerXCCJobTrigger:
-          Type: SQS # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#event-source-types
-          Properties:
-            Queue: !GetAtt CrawlerXXCJobs.Arn
-            BatchSize: 1
-            Enabled: true
-      Environment:
-        Variables:
-          JOB_QUEUE_URL: !Ref CrawlerXXCJobs
-      Tags:
-        project: ed-sports-betting
-
-  MatchDataIngestQueue:
+  InsertorIngestQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ed-match-data-crawling-module-ingest.fifo
       FifoQueue: true
       ContentBasedDeduplication: true
-      MessageRetentionPeriod: 1209600  # Purge messages from the gutter after a day
+      MessageRetentionPeriod: 1209600
 
-  Insertor:
-    Type: AWS::Serverless::Function
+  MatchDataNotificationsQueue:
+    Type: AWS::SQS::Queue
     Properties:
-      Runtime: python3.7
-      Timeout: 180
-      CodeUri: ./lambda/ed-match-data-insertor/
-      Handler: crawler_function.lambda_handler
+      QueueName: ed-match-data-notifications
+      MessageRetentionPeriod: 1209600
+
+  CrawlJobSchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - events.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
       Policies:
-        - AWSLambdaExecute # Managed Policy
-        - AmazonSQSFullAccess # Managed Policy
-      Events:
-        IngestJobTrigger:
-          Type: SQS # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#event-source-types
-          Properties:
-            Queue: !GetAtt MatchDataIngestQueue.Arn
-            BatchSize: 1
-            Enabled: true
-      Environment:
-        Variables:
-          JOB_QUEUE_URL: !Ref CrawlerXXCJobs
-      Tags:
-        project: ed-sports-betting
+        - PolicyName: queue-crawl-job-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow #  Todo: reduce the policy's scope
+                Action: '*'
+                Resource: '*'
+
+# Useful links
+# Implicitly generated resources: https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#s3
+# Event source types: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#event-source-types
+# Resource types: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
