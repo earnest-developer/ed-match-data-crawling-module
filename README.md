@@ -1,17 +1,15 @@
 # ed-match-data-crawling-module
 This is a mono repository of different services and cloud components. As a whole, the module's  
-purpose is to scrape specific URLs - using crawlers - then deduplicate, normalize and persists the data.  
+purpose is to scrape specific URLs then deduplicate, normalize and persists the data.  
 
-Is indicated as a crawling module in the Sports Predictions [architecture diagram](https://drive.google.com/file/d/1CE7FKSq8LaS-KvQZAYlxMyNxhMJoBQsX/view?usp=sharing)  
-
-It consists of the following lambda workers:  
+Indicated as a crawling module in the Sports Predictions [architecture diagram](https://drive.google.com/file/d/1CE7FKSq8LaS-KvQZAYlxMyNxhMJoBQsX/view?usp=sharing) and consists of the following lambda workers:  
 
 ## ed-match-data-xxc-crawler
 A stateless crawler that targets a specific URL. Can be scheduled to run nightly, if its run was fruitful it  
 will enqueue the data to the ingest queue of ed-match-data-insertor.  
 
 ## ed-match-data-insertor
-Dequeue deduplicated messages from an ingest queue. Inserts to the relational database
+Dequeues deduplicated messages from an ingest queue. Inserts to the relational database
 
 # infrastructure and manual deployments
 The module's infrastructure is defined in the CloudFormation `template.yaml`. It consists of the lambdas as well as  
