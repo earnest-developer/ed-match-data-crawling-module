@@ -53,7 +53,7 @@ def queue_notification(home_team: str, away_team: str, match_date: str):
 
 
 def parse_message(event):
-    match_date = event['Records'][0]['messageAttributes']['MatchDate']['StringValue']
+    match_date = event['Records'][0]['messageAttributes']['MatchDate']['stringValue']
     message_body = event['Records'][0]['body']
-    logging.log('Dequeuing batch: ' + match_date)
+    logging.info('Dequeuing batch: ' + match_date)
     return (match_date, json.loads(message_body))

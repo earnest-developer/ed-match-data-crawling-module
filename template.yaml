@@ -25,13 +25,6 @@ Resources:
       Policies:
         - AWSLambdaExecute
         - AmazonSQSFullAccess #  Todo: replace with execution role
-      VpcConfig: #  Todo: move to parameters
-        SecurityGroupIds:
-          - sg-65ca6405
-        SubnetIds:
-          - subnet-dca67590
-          - subnet-ddc283b4
-          - subnet-547bf62e
       Events:
         IngestJobTrigger:
           Type: SQS
@@ -104,6 +97,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ed-match-data-crawling-module-ingest.fifo
+      VisibilityTimeout: 300
       FifoQueue: true
       ContentBasedDeduplication: true
       MessageRetentionPeriod: 1209600

@@ -1,7 +1,9 @@
 6. Implement fallback
 7. Implement docker-compose-apps
-
-
+0. Fix configs for deployment
+1. Add retries to the insertor
+2. Review MessageGroupId
+3. Normalize the names of teams
 
 Blogging:
 1. Python lambda local debugging

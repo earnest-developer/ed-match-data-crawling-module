@@ -13,11 +13,11 @@
             "messageAttributes": {
                 "MessageType": {
                     "DataType": "String",
-                    "StringValue": "MatchData"
+                    "stringValue": "MatchData"
                 },
                 "MatchDate": {
                     "DataType": "String",
-                    "StringValue": "2020-03-01"
+                    "stringValue": "2020-03-01"
                 }
             },
             "md5OfBody": "9d442f5a247dce6056621e43560ddc0d",
